@@ -116,3 +116,67 @@ DRC completed with 0 errors. IO warnings are expected as no XDC constraints file
 
 -0 critical violations — no latches inferred,
 all outputs driven, synthesizable RTL confirmed.
+
+## RTL Analysis — Linter Report
+
+<img width="1625" height="898" alt="ss_Linter" src="https://github.com/user-attachments/assets/04eee4b6-f7b9-4e91-b2e2-414fad98824d" />
+
+RTL linter checks for common coding issues
+and potential design problems.
+
+| Check | Result |
+|-------|--------|
+| Latches inferred | 0 |
+| Undriven outputs | 0 |
+| Incomplete sensitivity lists | 0 |
+| Unused signals | 0 |
+| Width mismatches | 0 |
+
+**Key observations:**
+- 0 latches inferred — all always blocks have
+  default assignments and complete case statements
+- `always @(*)` used throughout — no manual
+  sensitivity list errors possible
+- All output ports driven in every code path
+- No width mismatches between sub-module ports
+
+ ## RTL Analysis — I/O Port Summary
+
+Complete list of top-level ports after elaboration.
+
+| Port | Direction | Width | Connected To |
+|------|-----------|-------|-------------|
+| A | Input | 16-bit | AU, LU, SU |
+| B | Input | 16-bit | AU, LU |
+| opcode | Input | 4-bit | Decoder |
+| result | Output | 16-bit | mux_out / A |
+| zero_flag | Output | 1-bit | result == 0 |
+| carry_flag | Output | 1-bit | carry_out |
+| negative_flag | Output | 1-bit | result[15] |
+| overflow_flag | Output | 1-bit | AND/OR gates |
+
+**Key observations:**
+- Total input bits: 36 (16+16+4)
+- Total output bits: 20 (16+1+1+1+1)
+- shift_unit is the only sub-module that
+  does not receive B input
+- negative_flag is the simplest flag —
+  directly connected to result[15]
+- overflow_flag has the most complex logic —
+  driven by chain of AND/OR gates
+  
+## RTL Analysis — Design Summary
+
+| Metric | Value |
+|--------|-------|
+| Total modules | 5 |
+| Top-level ports | 8 |
+| Total input bits | 36 |
+| Total output bits | 20 |
+| Sub-module instances | 4 |
+| Always blocks | 4 |
+| Assign statements | 6 |
+| Case statements | 4 |
+| Total operations supported | 16 |
+| Flags implemented | 4 |
+  
