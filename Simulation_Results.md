@@ -101,3 +101,93 @@ a positive yields a negative result — a signed arithmetic violation.
 | 7 | SUB | 0x0032 | 0x0032 | 0x0000 | 1 | 0 | 0 | 0 |
 | 8 | SUB | 0x8000 | 0x0001 | 0x7FFF | 0 | 0 | 0 | 1 |
 | 9 | SUB | 0x7FFF | 0xFFFF | 0x8000 | 0 | 1 | 1 | 1 |
+
+## Logic Unit — Simulation Results
+
+The logic unit supports **7 operations** (opcodes 4–10): AND, OR, XOR, NAND, NOR,
+XNOR, and NOT. All operations correctly compute bitwise results and assert the
+Negative flag when MSB=1. Zero flag is verified for AND operations producing
+zero output. Carry and Overflow flags are never asserted by logic operations.
+
+---
+
+### Test Operands
+Standard operands used across all logic tests:
+- **A = 0xF0F0** → binary `1111 0000 1111 0000`
+- **B = 0xFF00** → binary `1111 1111 0000 0000`
+
+---
+
+### AND — Zero Flag
+<img width="1582" height="823" alt="AND_ZF" src="https://github.com/user-attachments/assets/640f31a2-a962-44de-a14f-d6157e406b02" />
+
+`A=0xAAAA & B=0x5555 = 0x0000`. Alternating bit patterns `1010...` and `0101...`
+completely cancel under AND, producing zero and asserting the Zero flag.
+Dedicated test case proving logic operations correctly drive the Zero flag.
+
+---
+
+### OR — Negative Flag
+<img width="1585" height="820" alt="OR_NF" src="https://github.com/user-attachments/assets/0f7c4124-ccb5-4c99-a183-63f5b784d901" />
+
+`A=0xF0F0 | B=0xFF00 = 0xFFF0`. Bitwise OR sets MSB=1, correctly asserting
+the Negative flag. Zero, Carry, and Overflow flags remain deasserted.
+
+---
+
+### XOR
+<img width="1587" height="818" alt="XOR" src="https://github.com/user-attachments/assets/e6cd61c7-8c53-46d6-820c-7fbd21549a0a" />
+
+`A=0xF0F0 ^ B=0xFF00 = 0x0FF0`. Bits differ only in the middle nibbles,
+producing 0x0FF0. MSB=0 so all flags deasserted, confirming clean
+non-overlapping bit behavior.
+
+---
+
+### NAND
+<img width="1588" height="816" alt="NAND" src="https://github.com/user-attachments/assets/797c8b3f-0495-4cc6-9482-0be1c2532f85" />
+
+`~(A=0xF0F0 & B=0xFF00) = ~0xF000 = 0x0FFF`. AND result inverted.
+MSB of final result is 0, all flags correctly deasserted.
+
+---
+
+### NOR
+<img width="1590" height="826" alt="NOR" src="https://github.com/user-attachments/assets/717c15d3-7beb-4c8b-9aaf-ef86f5a350dd" />
+
+`~(A=0xF0F0 | B=0xFF00) = ~0xFFF0 = 0x000F`. OR result inverted.
+MSB=0, all flags correctly deasserted.
+
+---
+
+### XNOR — Negative Flag
+<img width="1588" height="827" alt="XNOR_NF" src="https://github.com/user-attachments/assets/47dca079-a3d7-44a3-acb3-b43b8477447a" />
+
+`~(A=0xF0F0 ^ B=0xFF00) = ~0x0FF0 = 0xF00F`. XOR result inverted.
+MSB=1 correctly asserts the Negative flag, all other flags deasserted.
+
+---
+
+### NOT
+<img width="1588" height="820" alt="NOT" src="https://github.com/user-attachments/assets/c1a96e53-a9cc-4ed7-aa38-eb3f36c40dff" />
+
+`~A=0xF0F0 = 0x0F0F`. All 16 bits inverted: `1111000011110000` →
+`0000111100001111`. MSB=0, all flags correctly deasserted.
+
+---
+
+### Logic Unit Test Summary
+
+| # | Operation | Opcode | A | B | Result | ZF | CF | NF | OVF |
+|---|-----------|--------|--------|--------|--------|----|----|----|----|
+| 1 | AND | `0100` | 0xAAAA | 0x5555 | 0x0000 | 1 | 0 | 0 | 0 |
+| 2 | AND | `0100` | 0xF0F0 | 0xFF00 | 0xF000 | 0 | 0 | 1 | 0 |
+| 3 | OR | `0101` | 0xF0F0 | 0xFF00 | 0xFFF0 | 0 | 0 | 1 | 0 |
+| 4 | XOR | `0110` | 0xF0F0 | 0xFF00 | 0x0FF0 | 0 | 0 | 0 | 0 |
+| 5 | NAND | `0111` | 0xF0F0 | 0xFF00 | 0x0FFF | 0 | 0 | 0 | 0 |
+| 6 | NOR | `1000` | 0xF0F0 | 0xFF00 | 0x000F | 0 | 0 | 0 | 0 |
+| 7 | XNOR | `1001` | 0xF0F0 | 0xFF00 | 0xF00F | 0 | 0 | 1 | 0 |
+| 8 | NOT | `1010` | 0xF0F0 | — | 0x0F0F | 0 | 0 | 0 | 0 |
+
+> **Design Note:** Logic operations never assert Carry or Overflow flags.
+> These flags are exclusively driven by the arithmetic unit.
